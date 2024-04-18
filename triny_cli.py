@@ -5,46 +5,43 @@ from TrinyCliConfigurator import CLIConfigurator
 import readline
 import tabulate
 from termcolor import colored
-
-
+from rich import box
+from rich.console import Console
+from rich.table import Table
 
 class Tabulator:
-    """docstring for Tabulator"""
     def __init__(self):
-        pass
+        self.console = Console()
 
     def print_response_table(self, response):
         try:
-            # Первая таблица
             if 'answer' in response:
-                data = response['answer']
-                if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-                    retcode = data[0].get('retcode', '')
-                    if retcode == 0:
-                        retcode_colored = colored(retcode, 'green')
-                        desc_colored = colored(data[0].get('desc', ''), 'green')
-                    elif retcode == 1:
-                        retcode_colored = colored(retcode, 'red')
-                        desc_colored = colored(data[0].get('desc', ''), 'red')
-                    else:
-                        retcode_colored = colored(retcode, 'yellow')
-                        desc_colored = colored(data[0].get('desc', ''), 'yellow')
-
-                    data[0]['retcode'] = retcode_colored
-                    data[0]['desc'] = desc_colored
-                    answer_table = tabulate.tabulate(data, headers="keys", tablefmt="pipe", stralign='center')
-                    print(answer_table)
-                    print(colored("\n==========ANSWER=======================================================================", 'yellow'))
-
-            # Вторая таблица
+                answer_data = response['answer']
+                if isinstance(answer_data, list) and len(answer_data) > 0 and isinstance(answer_data[0], dict):
+                    answer_table = Table(box=box.ROUNDED)
+                    for key in answer_data[0].keys():
+                        answer_table.add_column(key)
+                    for row in answer_data:
+                        retcode = row.get('retcode', '')
+                        if retcode == 0:
+                            row_values = [f'[green]{str(value)}[/green]' for value in row.values()]
+                        elif retcode == 1:
+                            row_values = [f'[red]{str(value)}[/red]' for value in row.values()]
+                        else:
+                            row_values = [f'[yellow]{str(value)}[/yellow]' for value in row.values()]
+                        answer_table.add_row(*row_values)
+                    self.console.print(answer_table)
             if 'data' in response:
                 data = response['data']
-                if data is not None and isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
-                    data_table = tabulate.tabulate(data, headers="keys", tablefmt="grid", stralign='center')
-                    print(data_table)
+                if isinstance(data, dict) and len(data) > 0:
+                    data_table = Table(box=box.ROUNDED)
+                    for key in data.keys():
+                        data_table.add_column(key)
+                    row_values = [str(value) for value in data.values()]
+                    data_table.add_row(*row_values)
+                    self.console.print(data_table)
         except json.JSONDecodeError:
             print("Error decoding JSON data")
-        
 
 
 
@@ -63,7 +60,7 @@ class CommandLine(cmd.Cmd):
         args = ""
         try:
             result = self.daemon_proxy.node(*args.split())
-            #print("Received result:", result)  # Добавим эту строку для отладки
+            print("Received result:", result)  # Добавим эту строку для отладки
             self.tab.print_response_table(result)
         except Exception as e:
             print(f"Error sending command: {e}")
@@ -71,7 +68,15 @@ class CommandLine(cmd.Cmd):
     def do_node(self, args):
         try:
             result = self.daemon_proxy.node(*args.split())
-            #print("Received result:", result)  # Добавим эту строку для отладки
+            print("Received result:", result)  # Добавим эту строку для отладки
+            self.tab.print_response_table(result)
+        except Exception as e:
+            print(f"Error sending command: {e}")
+
+    def do_self(self, args):
+        try:
+            result = self.daemon_proxy.self_method(*args.split())
+            print("Received result:", result)  # Добавим эту строку для отладки
             self.tab.print_response_table(result)
         except Exception as e:
             print(f"Error sending command: {e}")
