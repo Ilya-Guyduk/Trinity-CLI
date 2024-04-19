@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from your_module_name import CommandLine
+from triny_cli import CommandLine
 
 class TestCommandLine(unittest.TestCase):
     def setUp(self):
-        self.command_line = CommandLine('http://localhost:8000')  # Замените URL на адрес вашего демона
+        self.command_line = CommandLine('http://127.0.0.1:5555')  # Замените URL на адрес вашего демона
 
     @patch('builtins.print')
     def test_do_node(self, mock_print):
