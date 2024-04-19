@@ -3,8 +3,6 @@ import json
 import xmlrpc.client
 from TrinyCliConfigurator import CLIConfigurator
 import readline
-import tabulate
-from termcolor import colored
 from rich import box
 from rich.console import Console
 from rich.table import Table
